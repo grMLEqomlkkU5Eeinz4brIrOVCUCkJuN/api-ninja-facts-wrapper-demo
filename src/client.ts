@@ -34,6 +34,10 @@ const buildUrl = (base: string, ...segments: (string | undefined)[]): URL => {
 		.filter((segment): segment is string => segment !== undefined)
 		.flatMap((segment) => segment.split("/"))
 		.filter((segment) => segment.length > 0)
+		// "." and ".." must go before encoding: encodeURIComponent leaves dots
+		// untouched, and the URL constructor then resolves them, letting a
+		// segment like "../.." climb out of the /v1 base path entirely.
+		.filter((segment) => segment !== "." && segment !== "..")
 		.map(encodeURIComponent);
 
 	return new URL([base.replace(/\/+$/, ""), ...encoded].join("/"));
